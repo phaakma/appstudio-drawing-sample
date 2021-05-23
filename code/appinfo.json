@@ -43,17 +43,24 @@
     },
     "deployment": {
         "android": {
+            "packageName": ""
         },
         "arcgisRuntimeExtensionsLicense": "",
         "arcgisRuntimeLicense": "",
+        "clientId": "",
         "ios": {
+            "bundleId": "",
             "codeSignIdentity": ""
         },
         "macos": {
+            "bundleId": "",
             "codeSignIdentity": ""
         },
+        "publisherName": "",
         "shortcutName": "",
         "uwp": {
+            "packageName": "",
+            "productID": ""
         },
         "winphone": {
             "packageDisplayName": ""
@@ -66,8 +73,8 @@
     ],
     "display": {
         "desktop": {
-            "minimumHeight": 0,
-            "minimumWidth": 0,
+            "minimumHeight": 300,
+            "minimumWidth": 400,
             "windowMode": "default"
         },
         "phone": {
@@ -101,6 +108,7 @@
     },
     "type": "app",
     "universalLink": "",
+    "urlScheme": "",
     "version": {
         "major": 1,
         "micro": 1,

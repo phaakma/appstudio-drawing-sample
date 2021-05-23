@@ -45,6 +45,7 @@ Rectangle {
             anchors.fill: parent
             model:ListModel {
                 id:sampleItems
+                ListElement { name:"Draw Geometries"; url:"../Samples/DrawGeometries.qml"; description:"<p>This sample demonstrates drawing geometries.</p>" }
 
                 ListElement { name:"Load Web Map"; url:"../Samples/LoadWebMap.qml"; description:"<p>This sample demonstrates how to load a webmap in a MapView using Runtime. The Map initUrl property is defined using the webmap url. The webmap url is created using the webmap id.<br><p></p><a href='http://geonet.esri.com/groups/appstudio/blog/2016/12/06/how-to-describe-our-resources-in-terms-of-difficulty-complexity-and-time-to-digest'><span style=' text-decoration: underline; color:#0000ff;'>Resource Level:</span></a>🍌 </p>" }
 
