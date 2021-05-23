@@ -7,6 +7,8 @@ import QtQuick.Controls.Material 2.1
 import ArcGIS.AppFramework 1.0
 import Esri.ArcGISRuntime 100.10
 
+import "../controls" as Controls
+
 
 Item {
     property real scaleFactor: AppFramework.displayScaleFactor
@@ -18,11 +20,27 @@ Item {
         property alias graphicsOverlay: graphicsOverlay
 
         Map{
-            initUrl: "http://arcgis.com/sharing/rest/content/items/e25c55a23a574b2da421154259b569ae"
+            initUrl: "http://arcgis.com/sharing/rest/content/items/2fdeafe70afc48ac8629dc61d1351130"
         }
 
         GraphicsOverlay {
             id: graphicsOverlay
+        }
+    }
+
+    Controls.BookmarksView {
+
+        anchors{
+            left: parent.left
+            top: parent.top
+        }
+
+        width: 200 * scaleFactor
+        height: 600 * scaleFactor
+
+        model: mapView.map.bookmarks
+        onBookmarkSelected: {
+            mapView.setViewpointWithAnimationCurve(mapView.map.bookmarks.get(index).viewpoint, 2.0, Enums.AnimationCurveEaseInOutCubic)
         }
     }
 
@@ -59,19 +77,11 @@ Item {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: "+"
                 onClicked: {
-                    console.log("take point")
                     drawingWidget.addPoint(drawingWidget.view.currentViewpointCenter.center)
                 }
             }
         }
-
-
-
-
-
     }
-
-
 
 
     //::::::::::::::::::::: DRAWING WIDGET
@@ -79,13 +89,10 @@ Item {
     Item{
         id: drawingWidget
 
-
         property bool active: true
         property MapView view: mapView
         property bool viewReady: drawingWidget.view && drawingWidget.view.map && drawingWidget.view.map.loadStatus === Enums.LoadStatusLoaded
         property bool allSystemsGo: active && viewReady
-
-
 
         property int geometryType: Enums.GeometryTypePolygon
 
@@ -110,39 +117,29 @@ Item {
             //:: Here we capture all the mouse activity from the view and redirect it to custom functions
 
             function onMousePressed(mouse){
-                console.log("Mouse pressed: ", mouse)
             }
 
             function onMouseClicked(mouse){
-                console.log(" mouse clicked...")
             }
 
             function onMouseDoubleClicked(mouse){
-
             }
 
             function onMousePositionChanged(mouse){
-
             }
 
             function onMousePressedAndHeld(mouse){
-
             }
 
             function onMouseReleased(mouse){
-
             }
 
             function onMouseWheelChanged(wheel){
-
             }
 
             function onVisibleAreaChanged(){
                 drawingWidget.updateLiveGraphic();
             }
-
-
-
         }
 
         property GraphicsOverlay graphicsOverlay: mapView.graphicsOverlay

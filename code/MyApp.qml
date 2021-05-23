@@ -32,11 +32,40 @@ App{
         return AppFramework.displayScaleFactor * value
     }
     property real scaleFactor: AppFramework.displayScaleFactor
-    property int  baseFontSize : app.info.propertyValue("baseFontSize", 15 * scaleFactor) + (isSmallScreen ? 0 : 3)
+    property real fontScale: app.isDesktop? 0.8 : 1
+    readonly property real baseFontSize: fontScale * app.getProperty("baseFontSize", Qt.platform.os === "windows" ? 6 : 14)
     property bool isSmallScreen: (width || height) < units(400)
     property url  qmlfile
     property string sampleName
     property string descriptionText
+
+    readonly property real iconSize: 5 * app.baseUnit
+
+    readonly property color primaryColor: app.isDebug ? app.randomColor("primary") : app.getProperty("brandColor", "#166DB2")
+    readonly property color backgroundColor: app.isDebug ? app.randomColor("background") : "#EFEFEF"
+    readonly property color foregroundColor: app.isDebug ? app.randomColor("foreground") : "#22000000"
+    readonly property color separatorColor: Qt.darker(app.backgroundColor, 1.2)
+    readonly property color accentColor: Qt.lighter(app.primaryColor)
+    readonly property color titleTextColor: app.backgroundColor
+    readonly property color subTitleTextColor: Qt.darker(app.backgroundColor)
+    readonly property color baseTextColor: Qt.darker(app.subTitleTextColor)
+    readonly property color iconMaskColor: "transparent"
+    readonly property color black_87: "#DE000000"
+    readonly property color white_100: "#FFFFFFFF"
+    readonly property color warning_color:"#D54550"
+
+    property alias baseFontFamily: baseFontFamily.name
+    FontLoader {
+        id: baseFontFamily
+
+        source: app.folder.fileUrl(app.getProperty("regularFontTTF", "./assets/fonts/Roboto-Regular.ttf"))
+    }
+
+    property alias titleFontFamily: titleFontFamily.name
+    FontLoader {
+        id: titleFontFamily
+        source:  app.folder.fileUrl(app.getProperty("mediumFontTTF", "./assets/fonts/Roboto-Medium.ttf"))
+    }
 
     Page{
         anchors.fill: parent
@@ -73,6 +102,13 @@ App{
     Controls.DescriptionPage{
         id:descPage
         visible: false
+    }
+
+    //--------------------------------------------------------------------------
+
+    function getProperty (name, fallback) {
+        if (!fallback && typeof fallback !== "boolean") fallback = ""
+        return app.info.propertyValue(name, fallback) //|| fallback
     }
 }
 
