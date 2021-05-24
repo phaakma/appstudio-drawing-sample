@@ -11,6 +11,7 @@ import "../controls" as Controls
 
 
 Item {
+    id: root
     property real scaleFactor: AppFramework.displayScaleFactor
 
     MapView {
@@ -20,7 +21,7 @@ Item {
         property alias graphicsOverlay: graphicsOverlay
 
         Map{
-            initUrl: "http://arcgis.com/sharing/rest/content/items/2fdeafe70afc48ac8629dc61d1351130"
+            initUrl: "http://arcgis.com/sharing/rest/content/items/2fdeafe70afc48ac8629dc61d1351130" //nz web map: nztm
         }
 
         GraphicsOverlay {
@@ -29,6 +30,14 @@ Item {
     }
 
     Controls.BookmarksView {
+        id: bookmarksView
+        visible: false
+        Connections{
+            target: app
+            function onSomethingHappened(happening){
+                bookmarksView.visible = !bookmarksView.visible;
+            }
+        }
 
         anchors{
             left: parent.left
@@ -65,6 +74,10 @@ Item {
                 enabled: drawingWidget.viewReady
                 width: parent.width
                 text: "Draw"
+                font {
+                    pointSize: app.getProperty(app.baseFontSize * 0.4, 14)
+                    family:"%1,%2".arg(baseFontFamily).arg("Helvetica,Avenir")
+                }
                 checked: drawingWidget.active
                 onCheckedChanged: {
                     drawingWidget.active = checked;
@@ -76,8 +89,26 @@ Item {
                 width: 50 * scaleFactor
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: "+"
+                font {
+                    pointSize: app.getProperty(app.baseFontSize * 0.4, 14)
+                    family:"%1,%2".arg(baseFontFamily).arg("Helvetica,Avenir")
+                }
                 onClicked: {
-                    drawingWidget.addPoint(drawingWidget.view.currentViewpointCenter.center)
+                    drawingWidget.addPoint(drawingWidget.view.currentViewpointCenter.center) ;
+                }
+            }
+
+            Button{
+                enabled: drawingWidget.allSystemsGo
+                width: 50 * scaleFactor
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: "Clear"
+                font {
+                    pointSize: app.getProperty(app.baseFontSize * 0.1, 5)
+                    family:"%1,%2".arg(baseFontFamily).arg("Helvetica,Avenir")
+                }
+                onClicked: {
+                    drawingWidget.resetGraphics() ;
                 }
             }
         }
@@ -89,7 +120,7 @@ Item {
     Item{
         id: drawingWidget
 
-        property bool active: true
+        property bool active: false
         property MapView view: mapView
         property bool viewReady: drawingWidget.view && drawingWidget.view.map && drawingWidget.view.map.loadStatus === Enums.LoadStatusLoaded
         property bool allSystemsGo: active && viewReady
@@ -97,15 +128,20 @@ Item {
         property int geometryType: Enums.GeometryTypePolygon
 
         onAllSystemsGoChanged: {
-            if (allSystemsGo) resetGraphic();
+            console.log("All allSystemsGo changed to: ", allSystemsGo)
+            if (allSystemsGo) resetGraphics();
         }
 
         onGeometryTypeChanged: {
-            resetGraphic();
+            resetGraphics();
         }
 
         onActiveChanged: {
-            if (active) resetGraphic();
+            if (active && allSystemsGo){
+                console.log("active and all systems go...")
+                resetGraphics();
+            }
+            else if (!active){ reset(); }
         }
 
         anchors.fill: viewReady ? view : undefined
@@ -150,9 +186,17 @@ Item {
         property int currentPartIndex
         property int currentVertexIndex
 
+        function reset(){
+            view.graphicsOverlay.graphics.clear();
+        }
+
         function createBuilders(){
 
+            console.log("Request to create builders...")
+
             if (!allSystemsGo) return
+
+            console.log("All systems are go so we are creating the builders...")
 
             const props = {spatialReference: view.map.spatialReference};
 
@@ -179,13 +223,13 @@ Item {
             currentVertexIndex = 0;
         }
 
-        property Symbol polygonSymbol:
+        property var polygonSymbol:
             SimpleFillSymbol {
-            style: Enums.SimpleFillSymbolStyleDiagonalCross
-            color: Qt.rgba(0.0, 0.31, 0.0, 1)
+            style: Enums.SimpleFillSymbolStyleNull
+            color: "pink"
             SimpleLineSymbol {
                 style: Enums.SimpleLineSymbolStyleDash
-                color: Qt.rgba(0.0, 0.0, 0.5, 1)
+                color: "red"
                 width: 1
                 antiAlias: true
             }
@@ -203,26 +247,44 @@ Item {
             }
         }
 
-        property Symbol polylineSymbol
+        property Symbol polylineSymbol:
+            SimpleLineSymbol {
+            width: 1
+            color: "black"
+        }
 
-        property Symbol currentVertexSymbol
+        property Symbol currentVertexSymbol:
+            SimpleMarkerSymbol {
+            color: "teal"
+            size: 34.0
+            style: Enums.SimpleMarkerSymbolStyleCircle
 
+            // declare the symbol's outline
+            SimpleLineSymbol {
+                width: 1
+                color: "black"
+            }
+        }
 
-        function resetGraphic(){
+        function resetGraphics(){
             if (graphic && graphicsOverlay){
+                console.log("removing the graphic")
                 graphicsOverlay.graphics.removeOne(graphic);
             }
             if (liveGraphic && graphicsOverlay){
+                console.log("removing the live graphic...")
                 graphicsOverlay.graphics.removeOne(liveGraphic);
             }
 
             createBuilders();
-            const geom = ArcGISRuntimeEnvironment.createObject("Polygon", {spatialReference: view.map.spatialReference});
-            graphic = ArcGISRuntimeEnvironment.createObject("Graphic",{symbol: polygonSymbol, geometry: geom});
+
+            const customSymbolJson = app.folder.readJsonFile("./Samples/customSymbol.json")
+            const sym = ArcGISRuntimeEnvironment.createObject("MultilayerPolygonSymbol", {json: customSymbolJson});
+
+            graphic = ArcGISRuntimeEnvironment.createObject("Graphic", {symbol: sym, geometry: builder.geometry});
             graphicsOverlay.graphics.append(graphic);
 
-            const geom2 = ArcGISRuntimeEnvironment.createObject("Polygon", {spatialReference: view.map.spatialReference});
-            liveGraphic = ArcGISRuntimeEnvironment.createObject("Graphic",{symbol: liveSymbol, geometry: geom2});
+            liveGraphic = ArcGISRuntimeEnvironment.createObject("Graphic", {symbol: liveSymbol, geometry: builder.geometry, zIndex: 10});
             graphicsOverlay.graphics.append(liveGraphic);
         }
 
@@ -236,30 +298,26 @@ Item {
         }
 
         function addPoint(_point){
-            console.log("adding a point...", _point.x, _point.y)
             switch (geometryType){
             case Enums.GeometryTypePolygon:
-                addPointToPolygon(_point, graphic, builder)
+                addPointToPolygon(_point, graphic, builder);
 
                 if (liveBuilder.empty){
                     addPointToPolygon(_point, liveGraphic, liveBuilder);
                     addPointToPolygon(_point, liveGraphic, liveBuilder);
-                }
-                else if(liveBuilder.parts.part(0).pointCount===1){
                     addPointToPolygon(_point, liveGraphic, liveBuilder);
-                    updatePointInPolygon(_point, liveGraphic, liveBuilder, 0, 0);
                 }
                 else{
+                    liveBuilder.geometry = builder.geometry;
                     addPointToPolygon(_point, liveGraphic, liveBuilder);
                     updatePointInPolygon(_point, liveGraphic, liveBuilder, 0, liveBuilder.parts.part(0).pointCount-2);
                 }
-
-
-
                 break;
             }
 
         }
+
+        //:::::::::::::::POLYGON FUNCTIONS:::::::::::::::::::::::::::::
 
         function addPointToPolygon(_point, _graphic, _builder){
             let part;
@@ -275,8 +333,8 @@ Item {
             else{
                 part = _builder.parts.part(currentPartIndex);
             }
-            part.addPoint(_point);
-            _graphic.geometry = _builder.geometry;
+            part.addPointXY(_point.x, _point.y);
+            if (_builder.sketchValid) _graphic.geometry = _builder.geometry;
         }
 
         function updatePointInPolygon(_point, _graphic, _builder, _partIndex, _pointIndex){
@@ -284,23 +342,28 @@ Item {
                 console.error("Missing arguments to updatePointInPolygon function.")
                 return
             }
+
             //default to the last part and point if not specified
             _partIndex = _partIndex || _builder.parts.size-1;
             _pointIndex = _pointIndex ||  _builder.parts.part(_partIndex).pointCount-1;
+
             _builder.parts.part(_partIndex).setPoint(_pointIndex, _point);
             _graphic.geometry = _builder.geometry;
+        }
+
+
+        //:::::::::::::::POLYLINE FUNCTIONS:::::::::::::::::::::::::::::
+
+        function addPointToPolyline(_point, _graphic, _builder){
+            _builder.addPoint(_point)
+            if (_builder.sketchValid) _graphic.geometry = _builder.geometry;
         }
 
         CrossHairs{
             visible: parent.allSystemsGo
             anchors.centerIn: parent
         }
-
-
     }
-
-
-
 
 
 

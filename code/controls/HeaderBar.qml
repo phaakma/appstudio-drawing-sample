@@ -26,6 +26,31 @@ RowLayout{
     }
 
     Rectangle{
+        id: bookmarksRect
+        Layout.alignment: Qt.AlignRight
+        Layout.preferredWidth: 50*scaleFactor
+
+        ToolButton {
+            id: bookmarksImage
+            indicator: Image{
+                width: 30 * scaleFactor
+                height: 30 * scaleFactor
+                anchors.centerIn: parent
+                source: "../assets/bookmark.png"
+                fillMode: Image.PreserveAspectFit
+                mipmap: true
+            }
+            anchors {
+                right: parent.right
+                verticalCenter: parent.verticalCenter
+            }
+            onClicked: {
+                app.somethingHappened("bookmarks")
+            }
+        }
+    }
+
+    Rectangle{
         id:infoImageRect
         Layout.alignment: Qt.AlignRight
         Layout.preferredWidth: 50*scaleFactor

@@ -1,0 +1,245 @@
+{
+    "symbolLayers": [
+        {
+            "anchorPoint": {
+                "x": 0,
+                "y": 0
+            },
+            "anchorPointUnits": "Relative",
+            "angleX": 0,
+            "angleY": 0,
+            "billboardMode3D": "FaceNearPlane",
+            "colorLocked": false,
+            "depth3D": 0,
+            "dominantSizeAxis3D": "Y",
+            "enable": true,
+            "frame": {
+                "xmax": 5,
+                "xmin": -5,
+                "ymax": 5,
+                "ymin": -5
+            },
+            "markerGraphics": [
+                {
+                    "geometry": {
+                        "rings": [
+                            [
+                                [
+                                    0,
+                                    5
+                                ],
+                                [
+                                    0.87,
+                                    4.92
+                                ],
+                                [
+                                    1.71,
+                                    4.7
+                                ],
+                                [
+                                    2.5,
+                                    4.33
+                                ],
+                                [
+                                    3.21,
+                                    3.83
+                                ],
+                                [
+                                    3.83,
+                                    3.21
+                                ],
+                                [
+                                    4.33,
+                                    2.5
+                                ],
+                                [
+                                    4.7,
+                                    1.71
+                                ],
+                                [
+                                    4.92,
+                                    0.87
+                                ],
+                                [
+                                    5,
+                                    0
+                                ],
+                                [
+                                    4.92,
+                                    -0.87
+                                ],
+                                [
+                                    4.7,
+                                    -1.71
+                                ],
+                                [
+                                    4.33,
+                                    -2.5
+                                ],
+                                [
+                                    3.83,
+                                    -3.21
+                                ],
+                                [
+                                    3.21,
+                                    -3.83
+                                ],
+                                [
+                                    2.5,
+                                    -4.33
+                                ],
+                                [
+                                    1.71,
+                                    -4.7
+                                ],
+                                [
+                                    0.87,
+                                    -4.92
+                                ],
+                                [
+                                    0,
+                                    -5
+                                ],
+                                [
+                                    -0.87,
+                                    -4.92
+                                ],
+                                [
+                                    -1.71,
+                                    -4.7
+                                ],
+                                [
+                                    -2.5,
+                                    -4.33
+                                ],
+                                [
+                                    -3.21,
+                                    -3.83
+                                ],
+                                [
+                                    -3.83,
+                                    -3.21
+                                ],
+                                [
+                                    -4.33,
+                                    -2.5
+                                ],
+                                [
+                                    -4.7,
+                                    -1.71
+                                ],
+                                [
+                                    -4.92,
+                                    -0.87
+                                ],
+                                [
+                                    -5,
+                                    0
+                                ],
+                                [
+                                    -4.92,
+                                    0.87
+                                ],
+                                [
+                                    -4.7,
+                                    1.71
+                                ],
+                                [
+                                    -4.33,
+                                    2.5
+                                ],
+                                [
+                                    -3.83,
+                                    3.21
+                                ],
+                                [
+                                    -3.21,
+                                    3.83
+                                ],
+                                [
+                                    -2.5,
+                                    4.33
+                                ],
+                                [
+                                    -1.71,
+                                    4.7
+                                ],
+                                [
+                                    -0.87,
+                                    4.92
+                                ],
+                                [
+                                    0,
+                                    5
+                                ]
+                            ]
+                        ]
+                    },
+                    "symbol": {
+                        "symbolLayers": [
+                            {
+                                "color": [
+                                    255,
+                                    0,
+                                    0,
+                                    255
+                                ],
+                                "colorLocked": false,
+                                "enable": true,
+                                "type": "CIMSolidFill"
+                            }
+                        ],
+                        "type": "CIMPolygonSymbol"
+                    },
+                    "type": "CIMMarkerGraphic"
+                }
+            ],
+            "markerPlacement": {
+                "angleToLine": true,
+                "placeOnControlPoints": false,
+                "placeOnEndPoints": false,
+                "placeOnRegularVertices": true,
+                "placePerPart": false,
+                "type": "CIMMarkerPlacementOnVertices"
+            },
+            "offsetX": 0,
+            "offsetY": 0,
+            "offsetZ": 0,
+            "respectFrame": true,
+            "rotateClockwise": false,
+            "rotation": 0,
+            "scaleSymbolsProportionally": true,
+            "size": 10,
+            "type": "CIMVectorMarker",
+            "verticalOrientation3D": false
+        },
+        {
+            "capStyle": "Round",
+            "color": [
+                110,
+                110,
+                110,
+                255
+            ],
+            "colorLocked": false,
+            "enable": true,
+            "joinStyle": "Round",
+            "lineStyle3D": "Strip",
+            "miterLimit": 10,
+            "type": "CIMSolidStroke",
+            "width": 0.7
+        },
+        {
+            "color": [
+                0,
+                0,
+                200,
+                50
+            ],
+            "colorLocked": false,
+            "enable": true,
+            "type": "CIMSolidFill"
+        }
+    ],
+    "type": "CIMPolygonSymbol"
+}

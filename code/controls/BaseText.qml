@@ -30,7 +30,7 @@ Label {
     color: root.getAppProperty (app.baseTextColor, Qt.darker("#F7F8F8"))
    // font.family:  "%1,%2".arg(baseFontFamily).arg("Helvetica,Avenir")
     font {
-        pointSize: fontsize?fontsize:root.getAppProperty (app.baseFontSize, 14)
+        pointSize: fontsize?fontsize:root.getAppProperty (app.baseFontSize * 0.4, 14)
         //family: "%1,%2".arg(baseFontFamily).arg(fontNameFallbacks)
         family:"%1,%2".arg(baseFontFamily).arg("Helvetica,Avenir")
 

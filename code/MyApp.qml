@@ -33,13 +33,16 @@ App{
     }
     property real scaleFactor: AppFramework.displayScaleFactor
     property real fontScale: app.isDesktop? 0.8 : 1
-    readonly property real baseFontSize: fontScale * app.getProperty("baseFontSize", Qt.platform.os === "windows" ? 6 : 14)
+    //readonly property real baseFontSize: fontScale * app.getProperty("baseFontSize", Qt.platform.os === "windows" ? 10 : 14)
+    property int baseFontSize: app.info.propertyValue("baseFontSize", 15 * scaleFactor) + (isSmallScreen ? 0 : 3)
     property bool isSmallScreen: (width || height) < units(400)
+    readonly property bool isDesktop: Qt.platform.os === "ios" || Qt.platform.os === "android" ? false:true
     property url  qmlfile
     property string sampleName
     property string descriptionText
 
     readonly property real iconSize: 5 * app.baseUnit
+
 
     readonly property color primaryColor: app.isDebug ? app.randomColor("primary") : app.getProperty("brandColor", "#166DB2")
     readonly property color backgroundColor: app.isDebug ? app.randomColor("background") : "#EFEFEF"
@@ -53,6 +56,8 @@ App{
     readonly property color black_87: "#DE000000"
     readonly property color white_100: "#FFFFFFFF"
     readonly property color warning_color:"#D54550"
+
+    signal somethingHappened(string happening)
 
     property alias baseFontFamily: baseFontFamily.name
     FontLoader {
