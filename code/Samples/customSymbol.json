@@ -179,14 +179,26 @@
                         "symbolLayers": [
                             {
                                 "color": [
-                                    255,
+                                    200,
+                                    200,
+                                    200,
+                                    120
+                                ],
+                                "colorLocked": false,
+                                "enable": true,
+                                "type": "CIMSolidFill"
+                            },
+                            {
+                                "color": [
+                                    0,
                                     0,
                                     0,
                                     255
                                 ],
                                 "colorLocked": false,
                                 "enable": true,
-                                "type": "CIMSolidFill"
+                                "type": "CIMSolidStroke",
+                                "width": 0.7
                             }
                         ],
                         "type": "CIMPolygonSymbol"
@@ -216,9 +228,9 @@
         {
             "capStyle": "Round",
             "color": [
-                110,
-                110,
-                110,
+                20,
+                20,
+                20,
                 255
             ],
             "colorLocked": false,
@@ -231,10 +243,10 @@
         },
         {
             "color": [
-                0,
-                0,
-                200,
-                50
+                110,
+                110,
+                110,
+                150
             ],
             "colorLocked": false,
             "enable": true,

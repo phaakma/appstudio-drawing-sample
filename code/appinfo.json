@@ -43,7 +43,7 @@
     },
     "deployment": {
         "android": {
-            "packageName": ""
+            "packageName": "world.kaahma.drawinggeometries"
         },
         "arcgisRuntimeExtensionsLicense": "",
         "arcgisRuntimeLicense": "",
@@ -111,7 +111,7 @@
     "urlScheme": "",
     "version": {
         "major": 1,
-        "micro": 5,
+        "micro": 10,
         "minor": 0
     }
 }
