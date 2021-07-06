@@ -77,33 +77,17 @@ Item{
         }
 
         function onVisibleAreaChanged(){
-            //drawingWidget.updateLiveGraphic();
-            //     drawingWidget.updateNextPointLineGraphic(drawingWidget.view.currentViewpointCenter.center);
-
             drawingWidget.setNextPointLineGeometry(drawingWidget.view.currentViewpointCenter.center);
         }
     }
 
     property GraphicsOverlay graphicsOverlay: mapView.graphicsOverlay
     property Graphic graphic
- //   property Graphic liveGraphic
     property Graphic nextPointLineGraphic
     property Graphic currentVertexGraphic
     property Graphic verticesGraphic
-//    property GeometryBuilder builder
-//    property GeometryBuilder liveBuilder
-//    property GeometryBuilder nextPointLineBuilder
     property int currentPartIndex
     property int currentPointIndex
-
-    Connections{
-        target: parent.graphic ? parent.graphic : null
-        function onGeometryChanged(){
-            //  updateCurrentVertexGraphic();
-        }
-    }
-
-
 
     property var polygonSymbol:
         SimpleFillSymbol {
@@ -213,45 +197,8 @@ Item{
         return _builder;
     }
 
-//    function createBuilders(){
-
-//        console.log("Request to create builders...")
-
-//        if (!allSystemsGo) return
-
-//        console.log("All systems are go so we are creating the builders...")
-
-//        const emptyGeometryProperties = {spatialReference: view.map.spatialReference};
-
-//        switch (geometryType){
-//        case Enums.GeometryTypePolygon:
-//            builder = ArcGISRuntimeEnvironment.createObject("PolygonBuilder", emptyGeometryProperties);
-//            liveBuilder = ArcGISRuntimeEnvironment.createObject("PolygonBuilder", emptyGeometryProperties);
-//            nextPointLineBuilder = ArcGISRuntimeEnvironment.createObject("PolylineBuilder", emptyGeometryProperties);
-//            break;
-//        case Enums.GeometryTypePolyline:
-//            builder = ArcGISRuntimeEnvironment.createObject("PolylineBuilder", emptyGeometryProperties);
-//            break;
-//        case Enums.GeometryTypePoint:
-//            builder = ArcGISRuntimeEnvironment.createObject("PointBuilder", emptyGeometryProperties);
-//            break;
-//        case Enums.GeometryTypeMultipoint:
-//            builder = ArcGISRuntimeEnvironment.createObject("MultipointBuilder", emptyGeometryProperties);
-//            break;
-//        case Enums.GeometryTypeEnvelope:
-//            builder = ArcGISRuntimeEnvironment.createObject("EnvelopeBuilder", emptyGeometryProperties);
-//            break;
-//        }
-
-//        currentPartIndex = 0;
-//        currentPointIndex = -1;
-//    }
-
     function resetGraphics(){
         graphicsOverlay.graphics.clear();
-
-    //    const customSymbolJson = app.folder.readJsonFile("./Samples/customSymbol.json")
-    //    const sym = ArcGISRuntimeEnvironment.createObject("MultilayerPolygonSymbol", {json: customSymbolJson});
 
         graphic = ArcGISRuntimeEnvironment.createObject("Graphic", {symbol: polygonSymbol, zIndex: 0});
         graphicsOverlay.graphics.append(graphic);
@@ -269,69 +216,7 @@ Item{
         currentPointIndex = -1;
     }
 
-//    function updateLiveGraphic(){
-//        if (!allSystemsGo || !liveGraphic || !liveGraphic.geometry || liveGraphic.geometry.empty) return;
-//        switch (geometryType){
-//        case Enums.GeometryTypePolygon:
-//            updatePointInPolygon(drawingWidget.view.currentViewpointCenter.center, liveGraphic, liveBuilder);
-//            break;
-//        }
-//    }
-
-//    function updateNextPointLineGraphic(_point){
-//        if (!allSystemsGo) return;
-//        //  if (!allSystemsGo || !nextPointLineGraphic || !nextPointLineGraphic.geometry || nextPointLineGraphic.geometry.empty) return;
-//        switch (geometryType){
-//        case Enums.GeometryTypePolygon:
-//            console.log("100 BANANS")
-//            //console.log("builder point Count: ", builder.parts.part(currentPartIndex).pointCount)
-
-
-//            if (builder.sketchValid){
-//                nextPointLineBuilder.geometry = null;
-//                console.log("Sketch is valid:::> ",  builder.parts.part(currentPartIndex).pointCount, currentPointIndex  )
-//                nextPointLineBuilder.addPointXY(builder.parts.part(currentPartIndex).point(currentPointIndex).x, builder.parts.part(currentPartIndex).point(currentPointIndex).y);
-//                nextPointLineBuilder.addPointXY(_point.x, _point.y);
-
-//                if (builder.parts.part(currentPartIndex).pointCount-1 > currentPointIndex){
-//                    nextPointLineBuilder.addPointXY(builder.parts.part(currentPartIndex).point(currentPointIndex+1).x, builder.parts.part(currentPartIndex).point(currentPointIndex+1).y);
-//                }
-//                else{
-//                    //go back to zero - the first point...
-//                    nextPointLineBuilder.addPointXY(builder.parts.part(currentPartIndex).point(0).x, builder.parts.part(currentPartIndex).point(0).y);
-//                }
-//            }
-//            else {
-//                if (!nextPointLineBuilder.sketchValid){
-//                    console.log("!nextPointLineBuilder.sketchValid")
-//                    nextPointLineBuilder.addPointXY(_point.x, _point.y);
-//                }
-//                else if (builder.parts.part(currentPartIndex).pointCount === 1){
-//                    nextPointLineBuilder.parts.part(0).setPoint(nextPointLineBuilder.parts.part(0).pointCount-1, _point  )
-//                }
-//                else if (builder.parts.part(currentPartIndex).pointCount === 2 && nextPointLineBuilder.parts.part(0).pointCount === 2){
-//                    nextPointLineBuilder.addPointXY(_point.x, _point.y);
-//                }
-//                else{
-//                    nextPointLineBuilder.parts.part(0).setPoint(2, _point  )
-//                }
-//            }
-
-//            nextPointLineGraphic.geometry = nextPointLineBuilder.geometry;
-
-//            console.log(nextPointLineBuilder.parts.part(0).pointCount)
-
-//            //  console.log("nextPointLineBuilder.geometry", JSON.stringify(nextPointLineBuilder.geometry.json))
-//            break;
-//        }
-//    }
-
-    //    function updateCurrentVertexGraphic(_point){
-    //        currentVertexGraphic.geometry = _point;
-    //    }
-
     function addPoint(_point){
-
         switch (geometryType){
         case Enums.GeometryTypePolygon:
 
@@ -401,8 +286,6 @@ Item{
         return {currentPointIndex: currentPointIndex, nextPointIndex: nextPointIndex, previousPointIndex: previousPointIndex};
     }
 
-
-
     //:::::::::::::::POLYGON FUNCTIONS:::::::::::::::::::::::::::::
 
     function addPointToPolygon(_point, _graphic, _partIndex, _pointIndex){
@@ -431,33 +314,8 @@ Item{
 
         console.log("_builder.sketchValid", _builder.sketchValid)
 
-        // if (_builder.sketchValid) _graphic.geometry = _builder.geometry;
         _graphic.geometry = _builder.geometry;
     }
-
-//    function addPointToPolygon_old(_point, _graphic, _builder, _partIndex, _pointIndex){
-//        let part;
-//        if (_builder.parts.empty){
-//            part = ArcGISRuntimeEnvironment.createObject("Part");
-//            part.spatialReference = _builder.spatialReference;
-//            _builder.parts.addPart(part);
-//        }
-//        else if (!_partIndex || _partIndex > _builder.parts.size-1){
-//            _partIndex = _builder.parts.size-1;
-//            part = _builder.parts.part(_partIndex);
-//        }
-//        else{
-//            part = _builder.parts.part(_partIndex);
-//        }
-
-//        if (!part.sketchValid){
-//            part.addPoint(_point)
-//        }else{
-//            part.insertPoint(_pointIndex+1, _point);
-//        }
-
-//        if (_builder.sketchValid) _graphic.geometry = _builder.geometry;
-//    }
 
     function updatePointInPolygon(_point, _graphic, _builder, _partIndex, _pointIndex){
         if (!_point || !_graphic || !_builder){
@@ -546,13 +404,6 @@ Item{
             width: 100 * scaleFactor
             height: 200 * scaleFactor
             radius: 5 * scaleFactor
-
-            //            anchors{
-            //                right: parent.right
-            //                top: parent.top
-            //                rightMargin: 15 * scaleFactor
-            //                topMargin:  15 * scaleFactor
-            //            }
 
             Column{
                 width: parent.width
