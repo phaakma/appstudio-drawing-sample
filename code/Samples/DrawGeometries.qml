@@ -59,7 +59,12 @@ Item {
     DrawingWidget{
         id: drawingWidget
         view: mapView
+    }
 
+    Pane{
+        Text{
+            text: `Current point index: ${drawingWidget.currentPointIndex}`
+        }
     }
 
 

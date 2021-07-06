@@ -59,6 +59,7 @@ Item{
         }
 
         function onMouseClicked(mouse){
+            drawingWidget.setCurrentVertex(mouse)
         }
 
         function onMouseDoubleClicked(mouse){
@@ -181,6 +182,12 @@ Item{
         //create the builder then assign the geometry to it.
         const _builder = ArcGISRuntimeEnvironment.createObject(builderString, {spatialReference: sr});
         if (sourceGeometry) _builder.geometry = sourceGeometry;
+        if ( (_builder.geometryBuilderType === Enums.GeometryBuilderTypePolygonBuilder || _builder.geometryBuilderType === Enums.GeometryBuilderTypePolylineBuilder)
+                && _builder.parts.empty){
+            const part = ArcGISRuntimeEnvironment.createObject("Part");
+            part.spatialReference = _builder.spatialReference;
+            _builder.parts.addPart(part);
+        }
         return _builder;
     }
 
@@ -220,12 +227,10 @@ Item{
             //replace the current vertex geometry with this point
             currentVertexGraphic.geometry = _point;
 
-            //currentVertexGraphic.geometry = _point;
             currentPointIndex += 1;
 
             //this is for the line that tracks as the map pans.
             setNextPointLineGeometry(_point);
-            //  updateNextPointLineGraphic(_point)
             break;
         }
 
@@ -233,30 +238,43 @@ Item{
 
     function setNextPointLineGeometry(_point){
 
+        if (!_point || !graphic.geometry || graphic.geometry.empty) return;
+
         const _builder = createBuilder(undefined, Enums.GeometryTypePolyline);
-        if (nextPointLineGraphic.geometry) _builder.geometry = nextPointLineGraphic.geometry;
 
         if (!nextPointLineGraphic.geometry || nextPointLineGraphic.geometry.empty){
-            console.log("the nextPointLineGraphic is nothing")
-            //add the point 3 times
-
             _builder.addPoint(_point);
             _builder.addPoint(_point);
             _builder.addPoint(_point);
-            nextPointLineGraphic.geometry = _builder.geometry;
         }
         else{
             const pointIndexes = getNextAndPreviousPointIndexes(graphic.geometry, currentPointIndex, currentPartIndex);
-            _builder.parts.part(0).setPoint(0, graphic.geometry.parts.part(currentPartIndex).point(pointIndexes.currentPointIndex));
-            _builder.parts.part(0).setPoint(1, _point);
-            _builder.parts.part(0).setPoint(2, graphic.geometry.parts.part(currentPartIndex).point(pointIndexes.nextPointIndex));
+            if (pointIndexes) {
+
+                //NOTE:
+                //For some reason, under certain circumstances, trying to use
+                //graphic.geometry.parts.part(currentPartIndex).point(pointIndexes.currentPointIndex)
+                //here to set the start of the line to the current vertex location actually returns the previous vertex.
+                //Originally I was assigning the line geom back to the builder and using setPoint
+                //To replicate, start a new polygon drawing, add 3 points, then select vertex #1, add a point, then select the last vertex
+                //and pan the map.
+                //The workaround is to use the geometry of the currentVertexGraphic which seems to work.
+                //I couldn't figure out why it would work the other way, as it works otherwise.
+
+                _builder.addPoint(currentVertexGraphic.geometry);
+                _builder.addPoint(_point);
+                _builder.addPoint(graphic.geometry.parts.part(currentPartIndex).point(pointIndexes.nextPointIndex));
+            }
         }
 
-        _builder.parts.part(0).setPoint(1, _point);
         nextPointLineGraphic.geometry =  _builder.geometry;
     }
 
     function getNextAndPreviousPointIndexes(_geometry, _currentPointIndex, _currentPartIndex){
+        if (!_geometry || _geometry.empty || !String(_currentPointIndex) || !String(_currentPartIndex) || _currentPartIndex < 0 || _currentPointIndex < 0){
+            return;
+        }
+
         let nextPointIndex = _currentPointIndex + 1;
         const part = _geometry.parts.part(_currentPartIndex);
         if (nextPointIndex >= part.pointCount){
@@ -270,7 +288,8 @@ Item{
             previousPointIndex = 0;
         }
 
-        return {currentPointIndex: currentPointIndex, nextPointIndex: nextPointIndex, previousPointIndex: previousPointIndex};
+        const pointIndexes = {currentPointIndex: currentPointIndex, nextPointIndex: nextPointIndex, previousPointIndex: previousPointIndex};
+        return pointIndexes
     }
 
     function deleteCurrentPoint(){
@@ -296,31 +315,13 @@ Item{
     //:::::::::::::::POLYGON FUNCTIONS:::::::::::::::::::::::::::::
 
     function addPointToPolygon(_point, _graphic, _partIndex, _pointIndex){
-
-        let _builder = createBuilder(_graphic.geometry, Enums.GeometryTypePolygon)
-
-        let part;
-        if (_builder.parts.empty){
-            part = ArcGISRuntimeEnvironment.createObject("Part");
-            part.spatialReference = _builder.spatialReference;
-            _builder.parts.addPart(part);
-        }
-        else if (!_partIndex || _partIndex > _builder.parts.size-1){
-            _partIndex = _builder.parts.size-1;
-            part = _builder.parts.part(_partIndex);
-        }
-        else{
-            part = _builder.parts.part(_partIndex);
-        }
-
-        if (!part.sketchValid){
+        let _builder = createBuilder(_graphic.geometry, Enums.GeometryTypePolygon);
+        const part = _builder.parts.part(_partIndex);
+        if (!_builder.sketchValid){
             part.addPoint(_point)
         }else{
             part.insertPoint(_pointIndex+1, _point);
         }
-
-        console.log("_builder.sketchValid", _builder.sketchValid)
-
         _graphic.geometry = _builder.geometry;
     }
 
@@ -369,12 +370,41 @@ Item{
     }
 
 
+    //::::::::::::::::::UNDO FUNCTIONS:::::::::::::::::::::::::::::::::::::::::::
+
+    function undo(){
+
+    }
+
+    function redo(){
+
+    }
+
+    //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+    function setCurrentVertex(mouse){
+        const nearestVertex = GeometryEngine.nearestVertex(graphic.geometry, mouse.mapPoint);
+        if (!nearestVertex) return
+
+        const tolerance = 50;
+
+        if (nearestVertex.pointIndex >= 0 && nearestVertex.distance < tolerance){
+            currentPointIndex = nearestVertex.pointIndex;
+            currentVertexGraphic.geometry = nearestVertex.coordinate;
+            setNextPointLineGeometry(drawingWidget.view.currentViewpointCenter.center);
+        }
+    }
+
+
+
     //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     Rectangle{
         id: crossHairs
 
-        visible: parent.allSystemsGo
+        parent: drawingWidget.view ? drawingWidget.view : drawingWidget
+
+        visible: drawingWidget.allSystemsGo
         anchors.centerIn: parent
 
         property real lineThickness: 2*scaleFactor
@@ -470,12 +500,40 @@ Item{
                 }
 
                 Button{
+                    enabled: false // drawingWidget.allSystemsGo
+                    width: 50 * scaleFactor
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: "UNDO"
+                    font {
+                        pointSize: app.baseFontSize * 0.2
+                        family:"%1,%2".arg(baseFontFamily).arg("Helvetica,Avenir")
+                    }
+                    onClicked: {
+                        drawingWidget.undo() ;
+                    }
+                }
+
+                Button{
+                    enabled: false // drawingWidget.allSystemsGo
+                    width: 50 * scaleFactor
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: "REDO"
+                    font {
+                        pointSize: app.baseFontSize * 0.2
+                        family:"%1,%2".arg(baseFontFamily).arg("Helvetica,Avenir")
+                    }
+                    onClicked: {
+                        drawingWidget.redo() ;
+                    }
+                }
+
+                Button{
                     enabled: drawingWidget.allSystemsGo
                     width: 50 * scaleFactor
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: "Clear"
                     font {
-                        pointSize: app.getProperty(app.baseFontSize * 0.1, 5)
+                        pointSize: app.baseFontSize * 0.2
                         family:"%1,%2".arg(baseFontFamily).arg("Helvetica,Avenir")
                     }
                     onClicked: {
@@ -487,6 +545,31 @@ Item{
 
 
     }
+
+    function log(message, level){
+        let trace = false;
+
+        console.log("MESSAGE:::::::::::::::::::")
+        switch (level.toLowerCase()){
+        case "info":
+            console.info(message)
+            break;
+        case "warning":
+        case "warn":
+            console.warn(message)
+            break;
+        case "error":
+            console.error(message)
+            trace = true;
+            break;
+        }
+        if (trace){
+            console.trace();
+        }
+        console.log("FINISH MESSAGE:::::::::::::::::::::::::::")
+        return;
+    }
+
 }
 
 
