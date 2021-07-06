@@ -91,32 +91,20 @@ Item{
 
     property var polygonSymbol:
         SimpleFillSymbol {
-        style: Enums.SimpleFillSymbolStyleNull
-        color: "pink"
+        style: Enums.SimpleFillSymbolStyleSolid
+        color: Qt.rgba(200,200,200,0.2)
         SimpleLineSymbol {
-            style: Enums.SimpleLineSymbolStyleDash
-            color: "red"
-            width: 1
-            antiAlias: true
-        }
-    }
-
-    property Symbol liveSymbol:
-        SimpleFillSymbol {
-        style: Enums.SimpleFillSymbolStyleNull
-        color: "pink"
-        SimpleLineSymbol {
-            style: Enums.SimpleLineSymbolStyleDash
-            color: "red"
-            width: 1
+            style: Enums.SimpleLineSymbolStyleSolid
+            color: "darkgrey"
+            width: 3
             antiAlias: true
         }
     }
 
     property Symbol nextPointLineSymbol:
         SimpleLineSymbol {
-        style: Enums.SimpleLineSymbolStyleDash
-        color: "steelblue"
+        style: Enums.SimpleLineSymbolStyleShortDash
+        color: "lightgrey"
         width: 3
         antiAlias: true
     }
@@ -129,27 +117,26 @@ Item{
 
     property Symbol verticesSymbol:
         SimpleMarkerSymbol {
-        color: "blue"
-        size: 8 * scaleFactor
+        color: "darkgrey"
+        size: 5 * scaleFactor
         style: Enums.SimpleMarkerSymbolStyleCircle
 
-        // declare the symbol's outline
         SimpleLineSymbol {
             width: 1
-            color: "red"
+            color: "white"
         }
     }
 
     property Symbol currentVertexSymbol:
         SimpleMarkerSymbol {
-        color: "red"
-        size: 8 * scaleFactor
+        color: "white"
+        size: 5 * scaleFactor
         style: Enums.SimpleMarkerSymbolStyleCircle
 
         // declare the symbol's outline
         SimpleLineSymbol {
             width: 1
-            color: "red"
+            color: "darkgrey"
         }
     }
 
@@ -279,11 +266,31 @@ Item{
         if (previousPointIndex < 0 && part.pointCount > 1){
             previousPointIndex = part.pointCount-1
         }
-        else{
+        else if (previousPointIndex < 0){
             previousPointIndex = 0;
         }
 
         return {currentPointIndex: currentPointIndex, nextPointIndex: nextPointIndex, previousPointIndex: previousPointIndex};
+    }
+
+    function deleteCurrentPoint(){
+        switch(geometryType){
+        case Enums.GeometryTypePolygon:
+            //delete the point from the main graphic
+            const pointIndexes = getNextAndPreviousPointIndexes(graphic.geometry, currentPointIndex, currentPartIndex);
+            deletePointInPolygon(graphic, currentPartIndex, currentPointIndex);
+            //update the vertex multipoint graphic
+            deletePointInMultiPoint(currentPointIndex, verticesGraphic);
+
+            currentPointIndex = pointIndexes.previousPointIndex;
+            //update the current vertex geometry to the new current vertex
+            currentVertexGraphic.geometry = graphic.geometry.parts.part(currentPartIndex).point(currentPointIndex);
+            //update the live tracking graphic
+            setNextPointLineGeometry(drawingWidget.view.currentViewpointCenter.center)
+
+            break;
+        }
+
     }
 
     //:::::::::::::::POLYGON FUNCTIONS:::::::::::::::::::::::::::::
@@ -331,6 +338,12 @@ Item{
         _graphic.geometry = _builder.geometry;
     }
 
+    function deletePointInPolygon(_graphic, _partIndex, _pointIndex){
+        const _builder = createBuilder(_graphic.geometry, Enums.GeometryTypePolygon);
+        _builder.parts.part(_partIndex).removePoint(_pointIndex);
+        _graphic.geometry = _builder.geometry;
+    }
+
 
     //:::::::::::::::POLYLINE FUNCTIONS:::::::::::::::::::::::::::::
 
@@ -346,6 +359,12 @@ Item{
     function addPointToMultiPoint(_point, _graphic){
         const _builder = createBuilder(_graphic.geometry, Enums.GeometryTypeMultipoint);
         _builder.points.addPoint(_point);
+        _graphic.geometry = _builder.geometry;
+    }
+
+    function deletePointInMultiPoint(_pointIndex, _graphic){
+        const _builder = createBuilder(_graphic.geometry, Enums.GeometryTypeMultipoint);
+        _builder.points.removePoint(_pointIndex);
         _graphic.geometry = _builder.geometry;
     }
 
@@ -433,6 +452,20 @@ Item{
                     }
                     onClicked: {
                         drawingWidget.addPoint(drawingWidget.view.currentViewpointCenter.center) ;
+                    }
+                }
+
+                Button{
+                    enabled: drawingWidget.allSystemsGo
+                    width: 50 * scaleFactor
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: "-"
+                    font {
+                        pointSize: app.getProperty(app.baseFontSize * 0.4, 14)
+                        family:"%1,%2".arg(baseFontFamily).arg("Helvetica,Avenir")
+                    }
+                    onClicked: {
+                        drawingWidget.deleteCurrentPoint() ;
                     }
                 }
 
