@@ -1,8 +1,0 @@
-[IOS]
-distributionMethod=development
-
-[MacOS]
-signApp=false
-
-[Windows]
-signApp=false
