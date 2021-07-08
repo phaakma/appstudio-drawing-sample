@@ -142,7 +142,9 @@ Item{
     }
 
     function reset(){
-        view.graphicsOverlay.graphics.clear();
+        resetGraphics();
+        undoList = [];
+        undoMarker = 0;
     }
 
     function createBuilder(sourceGeometry, geomType, sr){
@@ -233,7 +235,28 @@ Item{
             setNextPointLineGeometry(_point);
             break;
         }
+        addToUndoList();
 
+    }
+
+    function deleteCurrentPoint(){
+        switch(geometryType){
+        case Enums.GeometryTypePolygon:
+            //delete the point from the main graphic
+            const pointIndexes = getNextAndPreviousPointIndexes(graphic.geometry, currentPointIndex, currentPartIndex);
+            deletePointInPolygon(graphic, currentPartIndex, currentPointIndex);
+            //update the vertex multipoint graphic
+            deletePointInMultiPoint(currentPointIndex, verticesGraphic);
+
+            currentPointIndex = pointIndexes.previousPointIndex;
+            //update the current vertex geometry to the new current vertex
+            currentVertexGraphic.geometry = graphic.geometry.parts.part(currentPartIndex).point(currentPointIndex);
+            //update the live tracking graphic
+            setNextPointLineGeometry(drawingWidget.view.currentViewpointCenter.center)
+
+            break;
+        }
+        addToUndoList();
     }
 
     function setNextPointLineGeometry(_point){
@@ -292,25 +315,7 @@ Item{
         return pointIndexes
     }
 
-    function deleteCurrentPoint(){
-        switch(geometryType){
-        case Enums.GeometryTypePolygon:
-            //delete the point from the main graphic
-            const pointIndexes = getNextAndPreviousPointIndexes(graphic.geometry, currentPointIndex, currentPartIndex);
-            deletePointInPolygon(graphic, currentPartIndex, currentPointIndex);
-            //update the vertex multipoint graphic
-            deletePointInMultiPoint(currentPointIndex, verticesGraphic);
 
-            currentPointIndex = pointIndexes.previousPointIndex;
-            //update the current vertex geometry to the new current vertex
-            currentVertexGraphic.geometry = graphic.geometry.parts.part(currentPartIndex).point(currentPointIndex);
-            //update the live tracking graphic
-            setNextPointLineGeometry(drawingWidget.view.currentViewpointCenter.center)
-
-            break;
-        }
-
-    }
 
     //:::::::::::::::POLYGON FUNCTIONS:::::::::::::::::::::::::::::
 
@@ -372,12 +377,60 @@ Item{
 
     //::::::::::::::::::UNDO FUNCTIONS:::::::::::::::::::::::::::::::::::::::::::
 
-    function undo(){
+    property var undoList: []
+    property int undoMarker: 0
 
+    function undo(){
+        if (undoMarker <= 1){
+            return;
+        }
+        undoMarker -= 1;
+        const snapshot = undoList[undoMarker-1];
+
+        let mainGeometry, verticesGeometry, currentVertexGeometry;
+        switch (drawingWidget.geometryType){
+        case Enums.GeometryTypePolygon:
+            graphic.geometry = snapshot.geometry;
+            verticesGraphic.geometry  = snapshot.verticesGeometry;
+            currentVertexGraphic.geometry = snapshot.currentVertexGeometry;
+            currentPartIndex = snapshot.currentPartIndex;
+            currentPointIndex = snapshot.currentPointIndex;
+            setNextPointLineGeometry(drawingWidget.view.currentViewpointCenter.center);
+            break;
+        }
     }
 
     function redo(){
+        if (undoMarker >= undoList.length){
+            return;
+        }
+        const snapshot = undoList[undoMarker];
+        undoMarker += 1;
 
+        let mainGeometry, verticesGeometry, currentVertexGeometry;
+        switch (drawingWidget.geometryType){
+        case Enums.GeometryTypePolygon:
+            graphic.geometry = snapshot.geometry;
+            verticesGraphic.geometry  = snapshot.verticesGeometry;
+            currentVertexGraphic.geometry = snapshot.currentVertexGeometry;
+            currentPartIndex = snapshot.currentPartIndex;
+            currentPointIndex = snapshot.currentPointIndex;
+            setNextPointLineGeometry(drawingWidget.view.currentViewpointCenter.center);
+            break;
+        }
+    }
+
+    function addToUndoList(){
+        const snapshot = {
+            geometry: graphic.geometry,
+            verticesGeometry: verticesGraphic.geometry,
+            currentVertexGeometry: currentVertexGraphic.geometry,
+            currentPartIndex: currentPartIndex,
+            currentPointIndex: currentPointIndex
+        }
+        undoList = undoList.slice(0, undoMarker);
+        undoMarker += 1;
+        undoList.push(snapshot);
     }
 
     //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -500,7 +553,7 @@ Item{
                 }
 
                 Button{
-                    enabled: false // drawingWidget.allSystemsGo
+                    enabled: drawingWidget.allSystemsGo
                     width: 50 * scaleFactor
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: "UNDO"
@@ -514,7 +567,7 @@ Item{
                 }
 
                 Button{
-                    enabled: false // drawingWidget.allSystemsGo
+                    enabled: drawingWidget.allSystemsGo
                     width: 50 * scaleFactor
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: "REDO"
@@ -537,7 +590,7 @@ Item{
                         family:"%1,%2".arg(baseFontFamily).arg("Helvetica,Avenir")
                     }
                     onClicked: {
-                        drawingWidget.resetGraphics() ;
+                        drawingWidget.reset() ;
                     }
                 }
             }
